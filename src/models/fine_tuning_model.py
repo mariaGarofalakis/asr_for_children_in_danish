@@ -1,5 +1,5 @@
 import argparse
-from data.make_dataset import DatasetBuilding
+from src.data.make_dataset import DatasetBuilding
 import _utils
 from transformers import AutoModelForCTC, TrainingArguments, Trainer
 
@@ -69,7 +69,10 @@ if __name__ == "__main__":
     parser.add_argument("-batch_size", default=14, type=int)
     parser.add_argument("-num_epochs", default=100, type=int)
     parser.add_argument("-dataset_dir", default="/zhome/2f/8/153764/Desktop/final/", type=str)
-    parser.add_argument("-dataset_name", default="test_data_augm", type=str)
+    parser.add_argument("-dataset_name", default="test_dataset_baby", type=str)
 
     
     args = parser.parse_args()
+
+    fine_tuning_obj = Model_fine_tuning()
+    fine_tuning_obj.fine_tuning()
