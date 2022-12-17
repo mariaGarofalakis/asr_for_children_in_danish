@@ -7,7 +7,7 @@ class DatasetBuilding:
     def __init__(self, script_dir, dataset_scrit_path):
         self.the_dataset = load_dataset(name='testd',data_dir=script_dir,path=dataset_scrit_path)
         self.train_data = self.the_dataset["train"]
-        self.evaluation_data = self.the_dataset["evaluation"]
+        self.evaluation_data = self.the_dataset["validation"]
         
         self.processor = None
 
@@ -46,5 +46,6 @@ class DatasetBuilding:
         self.train_data.map = self.train_data.map(self.prepare_dataset).remove_columns(["path", "audio", "sentence"])
         self.evaluation_data = self.evaluation_data.map(self.prepare_dataset).remove_columns(["path", "audio", "sentence"])
 
+        return self.train_data.map, self.evaluation_data
 
     

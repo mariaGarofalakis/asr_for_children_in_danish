@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from transformers import Wav2Vec2Processor, TrainerCallback
 from datasets import load_metric
 
-class _metrics():
+class Metrics():
     def __init__(self, dataset):
         self.dataset = dataset
 

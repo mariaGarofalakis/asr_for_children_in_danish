@@ -1,6 +1,6 @@
 import argparse
 from src.data.make_dataset import DatasetBuilding
-import _utils
+from src.models._utils import Metrics, DataCollatorCTCWithPadding, CustomCallback
 from transformers import AutoModelForCTC, TrainingArguments, Trainer
 
 class Model_fine_tuning(object):
@@ -15,11 +15,11 @@ class Model_fine_tuning(object):
 
     def fine_tuning(self):
 
-        dataset = DatasetBuilding(self.dataset_dir, self.dataset_dir + self.dataset_name)
-        dataset.make_dataset(self.model_checkpoint)
+        dataset = DatasetBuilding(self.dataset_name, self.dataset_dir)
+        train_data, evaluation_data = dataset.make_dataset(self.model_checkpoint)
 
-        data_collator = _utils.DataCollatorCTCWithPadding(processor=dataset.processor, padding=True)
-        metrics = _utils.Metrics(dataset)
+        data_collator = DataCollatorCTCWithPadding(processor=dataset.processor, padding=True)
+        metrics = Metrics(dataset)
 
         model = AutoModelForCTC.from_pretrained(
             self.model_checkpoint,
@@ -32,7 +32,7 @@ class Model_fine_tuning(object):
         group_by_length=True,
         per_device_train_batch_size=self.batch_size,
         evaluation_strategy="steps",
-        num_train_epochs=self.num_epocs,
+        num_train_epochs=self.num_epochs,
         fp16=True,
         gradient_checkpointing=True,
         save_steps=5000000,
@@ -50,14 +50,14 @@ class Model_fine_tuning(object):
             data_collator=data_collator,
             args=training_args,
             compute_metrics=metrics.compute_metrics,
-            train_dataset=dataset.train_data,
-            eval_dataset=dataset.evaluation_data,
+            train_dataset=train_data,
+            eval_dataset=evaluation_data,
             tokenizer=dataset.processor.feature_extractor,
         )
 
 
 
-        trainer.add_callback(_utils.CustomCallback(trainer))
+        trainer.add_callback(CustomCallback(trainer))
         trainer.train()
 
 
@@ -68,8 +68,8 @@ if __name__ == "__main__":
     parser.add_argument("-model_checkpoint", default="chcaa/xls-r-300m-danish-nst-cv9", type=str)
     parser.add_argument("-batch_size", default=14, type=int)
     parser.add_argument("-num_epochs", default=100, type=int)
-    parser.add_argument("-dataset_dir", default="/zhome/2f/8/153764/Desktop/final/", type=str)
-    parser.add_argument("-dataset_name", default="test_dataset_baby", type=str)
+    parser.add_argument("-dataset_dir", default="/zhome/2f/8/153764/Desktop/the_project/ASR_for_children_in_danish/data/", type=str)
+    parser.add_argument("-dataset_name", default="data", type=str)
 
     
     args = parser.parse_args()
