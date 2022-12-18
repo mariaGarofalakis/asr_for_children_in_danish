@@ -6,6 +6,15 @@ from dataclasses import dataclass
 from transformers import Wav2Vec2Processor, TrainerCallback
 from datasets import load_metric
 
+def save_model_info(model, processor, the_losses):
+    model.save_pretrained("/zhome/2f/8/153764/Desktop/the_project/ASR_for_children_in_danish/final_model")
+    processor.save_pretrained("/zhome/2f/8/153764/Desktop/the_project/ASR_for_children_in_danish/save_processor")
+
+    
+    with open('the_loss_file.txt', 'w') as f:
+        for log_history in the_losses:
+            print(log_history, file=f)
+
 class Metrics():
     def __init__(self, dataset):
         self.dataset = dataset
