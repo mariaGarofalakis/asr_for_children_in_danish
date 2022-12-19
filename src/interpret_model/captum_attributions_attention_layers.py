@@ -18,7 +18,7 @@ def visualize_token2head_scores(scores_mat,all_tokens):
 
     for idx, scores in enumerate(scores_mat):
         scores_np = np.array(scores)
-        ax = fig.add_subplot(4, 2, idx+1)
+        ax = fig.add_subplot(3, 8, idx+1)
         im = ax.matshow(scores_np, cmap='viridis')
         fontdict_x = {'fontsize': 7}
         fontdict_y = {'fontsize': 5}
@@ -36,7 +36,7 @@ def visualize_token2token_scores(scores_mat,all_tokens, x_label_name='Head'):
     fig.suptitle('Attention weights')
 
     for idx, scores in enumerate(scores_mat):
-        ax = fig.add_subplot(1, 2, idx+1)
+        ax = fig.add_subplot(4, 4, idx+1)
 
         im = ax.imshow(scores, cmap='viridis')        
         ax.set_xticks(range(len(all_tokens)))
@@ -130,7 +130,7 @@ def attention_layers_attributions():
 
 
 
-    visualize_token2head_scores(f_x_norm.squeeze().detach().cpu().numpy()[16:24],the_tokens)
+    visualize_token2head_scores(f_x_norm.squeeze().detach().cpu().numpy(),the_tokens)
 
     # layer x batch x num_heads x seq_length x seq_length x all_head_size
     output_attentions_all = output_attentions_all.unsqueeze(1)
@@ -140,7 +140,7 @@ def attention_layers_attributions():
     alpha_f_x_norm = norm_fn(alpha_f_x, dim=-1)
 
     layer = 23
-    visualize_token2token_scores(alpha_f_x_norm[layer].squeeze().detach().cpu().numpy()[:8],the_tokens)
+    visualize_token2token_scores(alpha_f_x_norm[layer].squeeze().detach().cpu().numpy(),the_tokens)
 
 
 
