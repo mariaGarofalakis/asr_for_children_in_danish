@@ -1,0 +1,116 @@
+from src.data.make_dataset import DatasetBuilding
+from transformers import AutoTokenizer, AutoConfig,Wav2Vec2ForCTC
+import argparse
+import interpret_model_utilis
+import torch
+from captum.attr import LayerActivation
+
+if torch.__version__ >= '1.7.0':
+    norm_fn = torch.linalg.norm
+else:
+    norm_fn = torch.norm
+
+def attention_layers_attributions():
+    dataset_dir = args.dataset_dir
+    dataset_name = args.dataset_name
+
+    device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+    model_checkpoint = "/zhome/2f/8/153764/Desktop/the_project/ASR_for_children_in_danish/final_model/"
+    model = Wav2Vec2ForCTC.from_pretrained(
+        "/zhome/2f/8/153764/Desktop/the_project/ASR_for_children_in_danishs/save_processor/", output_attentions=True)
+    model.to(device)
+    model.eval()
+    model.zero_grad()
+
+    config = AutoConfig.from_pretrained(model_checkpoint)
+
+    tokenizer_type = config.model_type if config.tokenizer_class is None else None
+    config = config if config.tokenizer_class is not None else None
+
+    tokenizer = AutoTokenizer.from_pretrained(
+                model_checkpoint,
+                config=config,
+                tokenizer_type=tokenizer_type,
+                bos_token="<s>",eos_token="</s>",unk_token="<unk>",pad_token="<pad>",word_delimiter_token="|"
+            )
+
+
+    dataset = DatasetBuilding(dataset_name, dataset_dir)
+    _, evaluation_data = dataset.make_dataset(model_checkpoint)
+
+    #Interpreting Layer Outputs and Self-Attention Matrices in each Layer
+    inputs, ref_value =  interpret_model_utilis.input_reference_pair(evaluation_data[20])
+    the_tokens = interpret_model_utilis.calculate_prediction_tokens(evaluation_data[20],tokenizer)
+
+
+    num_heads = 16
+    head_size = 64
+
+    layers = [model.wav2vec2.encoder.layers[layer].attention.v_proj for layer in range(len( model.wav2vec2.encoder.layers))]
+
+
+    la = LayerActivation(interpret_model_utilis.squad_pos_forward_func, layers)
+
+    value_layer_acts = la.attribute(inputs=inputs['input_values'])
+    value_layer_acts = torch.stack(value_layer_acts)
+    new_x_shape = value_layer_acts.size()[:-1] + (num_heads, head_size)
+    value_layer_acts = value_layer_acts.view(*new_x_shape)
+
+    value_layer_acts = value_layer_acts.permute(0, 1, 3, 2, 4)
+    value_layer_acts_shape = value_layer_acts.size()
+
+    # layer x batch x seq_length x num_heads x 1 x head_size
+    value_layer_acts = value_layer_acts.view(value_layer_acts_shape[:-1] + (1, value_layer_acts_shape[-1],))
+    value_layer_acts = value_layer_acts.swapaxes(2,3)
+    print('value_layer_acts: ', value_layer_acts.shape)
+
+    dense_acts = torch.stack([model.wav2vec2.encoder.layers[layer].attention.out_proj.weight for layer in range(len( model.wav2vec2.encoder.layers))])
+
+    all_head_size = 1024
+
+    dense_acts = dense_acts.view(len(layers), all_head_size, num_heads, head_size)
+
+    # layer x num_heads x head_size x all_head_size
+    dense_acts = dense_acts.permute(0, 2, 3, 1).contiguous()
+
+    f_x = torch.stack([value_layer_acts_i.matmul(dense_acts_i) for value_layer_acts_i, dense_acts_i in zip(value_layer_acts, dense_acts)])
+    f_x.shape
+
+    # layer x batch x seq_length x num_heads x 1 x all_head_size)
+    f_x_shape = f_x.size() 
+    f_x = f_x.view(f_x_shape[:-2] + (f_x_shape[-1],))
+    f_x = f_x.permute(0, 1, 3, 2, 4).contiguous() 
+
+    #(layers x batch, num_heads, seq_length, all_head_size)
+    f_x_shape = f_x.size() 
+
+    #(layers x batch, num_heads, seq_length)
+    f_x_norm = norm_fn(f_x, dim=-1)
+
+
+
+
+    interpret_model_utilis.visualize_token2head_scores(f_x_norm.squeeze().detach().cpu().numpy()[16:24],the_tokens)
+
+    # layer x batch x num_heads x seq_length x seq_length x all_head_size
+    output_attentions_all = output_attentions_all.unsqueeze(1)
+    alpha_f_x = torch.einsum('lbhks,lbhsd->lbhksd', output_attentions_all.cpu(), f_x.cpu())
+
+    # layer x batch x num_heads x seq_length x seq_length
+    alpha_f_x_norm = norm_fn(alpha_f_x, dim=-1)
+
+    layer = 23
+    interpret_model_utilis.visualize_token2token_scores(alpha_f_x_norm[layer].squeeze().detach().cpu().numpy()[:8],the_tokens)
+
+
+
+
+
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-dataset_dir", default="/zhome/2f/8/153764/Desktop/the_project/ASR_for_children_in_danish/data/", type=str)
+    parser.add_argument("-dataset_name", default="data", type=str) 
+    args = parser.parse_args()
+    attention_layers_attributions()
+
