@@ -8,16 +8,6 @@ import matplotlib.pyplot as plt
 
 import seaborn as sns
 
-def visualize_token2token_scores(scores_mat, x_label_name='Head'):
-    fig = plt.figure(figsize=(20, 20))
-
-    for idx, scores in enumerate(scores_mat):
-        ax = fig.add_subplot(3, 3, idx+1)
-        # append the attention weights
-        im = ax.imshow(scores, cmap='viridis')
-        fig.colorbar(im, fraction=0.046, pad=0.04)
-    plt.tight_layout()
-    plt.show()
 
 def plot_layers_heatmap(scores):
     fig, axs = plt.subplots(3,3)
@@ -44,6 +34,7 @@ def plot_layers_heatmap(scores):
 
 
     plt.show()
+    plt.savefig('/zhome/2f/8/153764/Desktop/the_project/ASR_for_children_in_danish/interpret_model/results/Feature_enco.png')
 
 
 

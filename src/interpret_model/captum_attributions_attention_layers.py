@@ -30,6 +30,7 @@ def visualize_token2head_scores(scores_mat,all_tokens):
         fig.colorbar(im, fraction=0.046, pad=0.04)
     plt.tight_layout()
     plt.show()
+    plt.savefig('/zhome/2f/8/153764/Desktop/the_project/ASR_for_children_in_danish/interpret_model/results/attention_token_to_head.png')
 
 def visualize_token2token_scores(scores_mat,all_tokens, x_label_name='Head'):
     fig = plt.figure(figsize=(20, 20))
@@ -48,6 +49,8 @@ def visualize_token2token_scores(scores_mat,all_tokens, x_label_name='Head'):
         fig.colorbar(im, fraction=0.046)
     plt.tight_layout(pad=5)
     plt.show()
+    plt.savefig('/zhome/2f/8/153764/Desktop/the_project/ASR_for_children_in_danish/interpret_model/results/attention_token_to_token.png')
+
 
 
 def attention_layers_attributions():

@@ -16,6 +16,7 @@ def plot_pos_conv_embendings(scores, the_tokens):
     ax = sns.heatmap(np.swapaxes(attribitons,0,1), xticklabels=xticklabels, linewidth=0.00005)
     ax.set_xticklabels(xticklabels, rotation = 360, ha="left",fontsize=8)
     plt.show()
+    plt.savefig('/zhome/2f/8/153764/Desktop/the_project/ASR_for_children_in_danish/interpret_model/results/possitional_conv_emb.png')
 
 
 
