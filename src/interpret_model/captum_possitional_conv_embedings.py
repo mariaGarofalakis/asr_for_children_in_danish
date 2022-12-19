@@ -1,10 +1,23 @@
 
-from transformers import Wav2Vec2ForCTC
+from transformers import AutoTokenizer, AutoConfig,Wav2Vec2ForCTC
 import torch
 from captum.attr import LayerIntegratedGradients
 from src.data.make_dataset import DatasetBuilding
 import argparse
 import interpret_model_utilis
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+def plot_pos_conv_embendings(scores, the_tokens):
+    attribitons = np.array(scores).squeeze()
+    xticklabels= the_tokens
+
+    ax = sns.heatmap(np.swapaxes(attribitons,0,1), xticklabels=xticklabels, linewidth=0.00005)
+    ax.set_xticklabels(xticklabels, rotation = 360, ha="left",fontsize=8)
+    plt.show()
+
+
 
 
 def calculate_conv_embedings():
@@ -19,12 +32,25 @@ def calculate_conv_embedings():
     model.eval()
     model.zero_grad()
 
+    config = AutoConfig.from_pretrained(model_checkpoint)
+
+    tokenizer_type = config.model_type if config.tokenizer_class is None else None
+    config = config if config.tokenizer_class is not None else None
+
+    tokenizer = AutoTokenizer.from_pretrained(
+                model_checkpoint,
+                config=config,
+                tokenizer_type=tokenizer_type,
+                bos_token="<s>",eos_token="</s>",unk_token="<unk>",pad_token="<pad>",word_delimiter_token="|"
+            )
+
 
     dataset = DatasetBuilding(dataset_name, dataset_dir)
     _, evaluation_data = dataset.make_dataset(model_checkpoint)
 
     #Interpreting Layer Outputs and Self-Attention Matrices in each Layer
     inputs, ref_value =  interpret_model_utilis.input_reference_pair(evaluation_data[20])
+    the_tokens = interpret_model_utilis.calculate_prediction_tokens(evaluation_data[20],tokenizer)
 
 
 
@@ -36,7 +62,7 @@ def calculate_conv_embedings():
     embedings_conv = attributions.squeeze().cpu().detach().tolist()
 
     interpret_model_utilis.save_atributions_to_file(embedings_conv, '/zhome/2f/8/153764/Desktop/the_project/ASR_for_children_in_danish/interpret_model/results/convolutional_embendings.txt')
-
+    return embedings_conv, the_tokens
 
 
 
@@ -49,5 +75,6 @@ if __name__ == "__main__":
     
     args = parser.parse_args()
 
-    calculate_conv_embedings()
+    embedings_conv , the_tokens = calculate_conv_embedings()
+    plot_pos_conv_embendings(embedings_conv , the_tokens)
     

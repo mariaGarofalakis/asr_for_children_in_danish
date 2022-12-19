@@ -4,7 +4,46 @@ import interpret_model_utilis
 from transformers import Wav2Vec2ForCTC
 import torch
 from captum.attr import LayerConductance
+import matplotlib.pyplot as plt
 
+import seaborn as sns
+
+def visualize_token2token_scores(scores_mat, x_label_name='Head'):
+    fig = plt.figure(figsize=(20, 20))
+
+    for idx, scores in enumerate(scores_mat):
+        ax = fig.add_subplot(3, 3, idx+1)
+        # append the attention weights
+        im = ax.imshow(scores, cmap='viridis')
+        fig.colorbar(im, fraction=0.046, pad=0.04)
+    plt.tight_layout()
+    plt.show()
+
+def plot_layers_heatmap(scores):
+    fig, axs = plt.subplots(3,3)
+    fig.suptitle('Feature Encoder Layer Attributions')
+    fig.tight_layout(pad=1.7)
+
+
+    axs[0,0].title.set_text('1st Temp. Conv Layer')
+    axs[0,1].title.set_text('2nd Temp. Conv Layer')
+    axs[0,2].title.set_text('3nd Temp. Conv Layer')
+    axs[1,0].title.set_text('4th Temp. Conv Layer')
+    axs[1,1].title.set_text('5th Temp. Conv Layer')
+    axs[1,2].title.set_text('6th Temp. Conv Layer')
+    axs[2,1].title.set_text('7th Temp. Conv Layer')
+
+
+    sns.heatmap(scores[0], linewidth=0.00005, ax = axs[0,0])
+    sns.heatmap(scores[1], linewidth=0.00005, ax = axs[0,1])
+    sns.heatmap(scores[2], linewidth=0.00005, ax = axs[0,2])
+    sns.heatmap(scores[3], linewidth=0.00005, ax = axs[1,0])
+    sns.heatmap(scores[4], linewidth=0.00005, ax = axs[1,1])
+    sns.heatmap(scores[5], linewidth=0.00005, ax = axs[1,2])
+    sns.heatmap(scores[6], linewidth=0.00005, ax = axs[2,1])
+
+
+    plt.show()
 
 
 
@@ -26,6 +65,7 @@ def calculate_feature_encoder():
 
     #Interpreting Layer Outputs and Self-Attention Matrices in each Layer
     inputs, ref_value =  interpret_model_utilis.input_reference_pair(evaluation_data[20])
+    scores = []
 
     for itr,the_layer in enumerate(model.wav2vec2.feature_extractor.conv_layers):
 
@@ -36,8 +76,10 @@ def calculate_feature_encoder():
                                         return_convergence_delta=True)
         feature_encoder = feature_encoder.cpu().detach().tolist()
 
-        interpret_model_utilis.save_atributions_to_file(feature_encoder,'/zhome/2f/8/153764/Desktop/the_project/ASR_for_children_in_danish/interpret_model/results/feature_encoder'+str(itr))
+        scores.append(feature_encoder)
 
+        interpret_model_utilis.save_atributions_to_file(feature_encoder,'/zhome/2f/8/153764/Desktop/the_project/ASR_for_children_in_danish/interpret_model/results/feature_encoder/feature_encoder_layer_atr/'+str(itr)+'.txt')
+    return scores
 
 if __name__ == "__main__":
 
@@ -48,5 +90,7 @@ if __name__ == "__main__":
     
     args = parser.parse_args()
 
-    calculate_feature_encoder()
+    scores = calculate_feature_encoder()
+    plot_layers_heatmap(scores)
+
     

@@ -4,11 +4,51 @@ import argparse
 import interpret_model_utilis
 import torch
 from captum.attr import LayerActivation
+import numpy as np
+import matplotlib.pyplot as plt
 
 if torch.__version__ >= '1.7.0':
     norm_fn = torch.linalg.norm
 else:
     norm_fn = torch.norm
+
+
+def visualize_token2head_scores(scores_mat,all_tokens):
+    fig = plt.figure(figsize=(30, 50))
+
+    for idx, scores in enumerate(scores_mat):
+        scores_np = np.array(scores)
+        ax = fig.add_subplot(4, 2, idx+1)
+        im = ax.matshow(scores_np, cmap='viridis')
+        fontdict_x = {'fontsize': 7}
+        fontdict_y = {'fontsize': 5}
+        ax.set_xticks(range(scores_np.shape[1]))
+        ax.set_yticks(range(scores_np.shape[0]))
+        ax.set_xticklabels(all_tokens, fontdict=fontdict_x, rotation=0)   
+        ax.set_yticklabels(range(scores_np.shape[0]), fontdict=fontdict_y)
+        ax.set_xlabel('Layer {}'.format(idx+17))
+        fig.colorbar(im, fraction=0.046, pad=0.04)
+    plt.tight_layout()
+    plt.show()
+
+def visualize_token2token_scores(scores_mat,all_tokens, x_label_name='Head'):
+    fig = plt.figure(figsize=(20, 20))
+    fig.suptitle('Attention weights')
+
+    for idx, scores in enumerate(scores_mat):
+        ax = fig.add_subplot(1, 2, idx+1)
+
+        im = ax.imshow(scores, cmap='viridis')        
+        ax.set_xticks(range(len(all_tokens)))
+        ax.set_yticks(range(len(all_tokens)))
+        ax.set_xticklabels(all_tokens, rotation = 360, ha="left")
+        ax.tick_params(axis='both', which='major', labelsize=7, pad=7)
+        fontdict_y = {'fontsize': 7}  
+        ax.set_yticklabels(all_tokens, rotation = 270, ha="left", fontdict=fontdict_y)
+        fig.colorbar(im, fraction=0.046)
+    plt.tight_layout(pad=5)
+    plt.show()
+
 
 def attention_layers_attributions():
     dataset_dir = args.dataset_dir
@@ -90,7 +130,7 @@ def attention_layers_attributions():
 
 
 
-    interpret_model_utilis.visualize_token2head_scores(f_x_norm.squeeze().detach().cpu().numpy()[16:24],the_tokens)
+    visualize_token2head_scores(f_x_norm.squeeze().detach().cpu().numpy()[16:24],the_tokens)
 
     # layer x batch x num_heads x seq_length x seq_length x all_head_size
     output_attentions_all = output_attentions_all.unsqueeze(1)
@@ -100,7 +140,7 @@ def attention_layers_attributions():
     alpha_f_x_norm = norm_fn(alpha_f_x, dim=-1)
 
     layer = 23
-    interpret_model_utilis.visualize_token2token_scores(alpha_f_x_norm[layer].squeeze().detach().cpu().numpy()[:8],the_tokens)
+    visualize_token2token_scores(alpha_f_x_norm[layer].squeeze().detach().cpu().numpy()[:8],the_tokens)
 
 
 
