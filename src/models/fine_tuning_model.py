@@ -29,7 +29,7 @@ class Model_fine_tuning(object):
         )
         perform_fine_tuning = Fine_tuner(model, train_data, evaluation_data, data_collator, self.batch_size)
 
-        log_losses = perform_fine_tuning.fine_tuning_process(self.num_epochs,self.lr)
+        log_losses = perform_fine_tuning.fine_tuning_process(dataset.processor, self.num_epochs,self.lr)
         save_model_info(model, dataset.processor, log_losses)
         
 

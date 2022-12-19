@@ -33,37 +33,29 @@ class Fine_tuner():
         self.augmentation = SomeOf((1, 3),transforms,p=0.8)
         self.the_penaldy = EWC_Pemalty()
 
-    def compute_metrics(self, pred):
-
+    def compute_metrics(self, pred, reference_labels, processor):
         wer_metric = load("wer")
         pred_logits = pred.logits
-        pred_ids = np.argmax(pred_logits, axis=-1)
-        pred_str = self.dataset.processor.batch_decode(pred_ids)
-        """
-        we transform the encoded labels back to the original string 
-        by replacing -100 with the pad_token_id and decoding the 
-        ids while making sure that consecutive tokens are not 
-        grouped to the same token in CTC style
-        """
-        label_str = self.dataset.processor.batch_decode(pred.label_ids, group_tokens=False)
+        pred_ids = torch.argmax(pred_logits.cpu(), axis=-1)
+        pred_str = processor.batch_decode(pred_ids)
+        wer = wer_metric.compute(predictions=pred_str, references=reference_labels)
 
-        wer = wer_metric.compute(predictions=pred_str, references=label_str)
+        return wer
 
-        return {"wer": wer}
-
-    def evaluate_model(self):
+    def evaluate_model(self, processor):
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.model.eval()
         evaluation_wer = []
         for batch in self.eval_dataloader:
             batch = {k: v.to(device) for k, v in batch.items()}
             with torch.no_grad():
                 outputs = self.model(**batch)
-
-            evaluation_wer.append(self.compute_metrics(outputs, batch))
-        return evaluation_wer/len(evaluation_wer)
+            label_str = processor.batch_decode(batch['labels'], group_tokens=False)
+            evaluation_wer.append(self.compute_metrics(outputs, label_str, processor))
+        return sum(evaluation_wer)/len(evaluation_wer)
         
 
-    def fine_tuning_process(self,num_epochs, learning_rate):
+    def fine_tuning_process(self, processor, num_epochs, learning_rate):
         optimizer = AdamW(self.model.parameters(), lr=learning_rate)
         num_training_steps = num_epochs * len(self.train_dataloader)
         lr_scheduler = get_scheduler(name="linear", 
@@ -88,6 +80,7 @@ class Fine_tuner():
                                     self.augmentation(
                                     batch['input_values'].unsqueeze(dim=1),sample_rate=16000),
                                     random.uniform(1, 1.2),sample_rate=16000).squeeze(dim=1)
+                label_str = processor.batch_decode(batch['labels'], group_tokens=False)
                 outputs = self.model(**batch)
                 importance = 1000
                 loss = outputs.loss+ importance * self.the_penaldy.penalty(self.model)
@@ -101,13 +94,13 @@ class Fine_tuner():
                 optimizer.zero_grad()
                 progress_bar.update(1)
 
-                train_wer.append(self.compute_metrics(outputs))         
+                train_wer.append(self.compute_metrics(outputs,label_str,processor))         
            
-            av_train_wer = train_wer/len(train_wer)
-            av_train_loss = train_loss/len(train_loss)
-            evaluation_wer = self.evaluate_model()
+            av_train_wer = sum(train_wer)/len(train_wer)
+            av_train_loss = sum(train_loss)/len(train_loss)
+            evaluation_wer = self.evaluate_model(processor)
 
 
-            print("\'train_loss\': {} \'train_wer\': {}, \'eval_wer\': {}}".format(av_train_loss, av_train_wer, evaluation_wer))
+            print("\'train_loss\': " + str(av_train_loss) + "\'train_wer\': " + str(av_train_wer) + ", \'eval_wer\': " + str(evaluation_wer) + "}")
             the_losses.append("\'train_loss\': " + str(av_train_loss) + "\'train_wer\': " + str(av_train_wer) + ", \'eval_wer\': " + str(evaluation_wer) + "}")
         return the_losses
