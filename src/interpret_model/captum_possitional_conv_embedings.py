@@ -26,9 +26,8 @@ def calculate_conv_embedings():
     dataset_name = args.dataset_name
 
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-    model_checkpoint = "/zhome/2f/8/153764/Desktop/the_project/ASR_for_children_in_danish/final_model/"
-    model = Wav2Vec2ForCTC.from_pretrained(
-        "/zhome/2f/8/153764/Desktop/the_project/ASR_for_children_in_danishs/save_processor/", output_attentions=True)
+    model_checkpoint = "chcaa/xls-r-300m-danish-nst-cv9"
+    model = Wav2Vec2ForCTC.from_pretrained(model_checkpoint, output_attentions=True)
     model.to(device)
     model.eval()
     model.zero_grad()
@@ -51,7 +50,7 @@ def calculate_conv_embedings():
 
     #Interpreting Layer Outputs and Self-Attention Matrices in each Layer
     inputs, ref_value =  interpret_model_utilis.input_reference_pair(evaluation_data[20])
-    the_tokens = interpret_model_utilis.calculate_prediction_tokens(evaluation_data[20],tokenizer)
+    the_tokens = interpret_model_utilis.calculate_prediction_tokens(model,evaluation_data[20],tokenizer)
 
 
 

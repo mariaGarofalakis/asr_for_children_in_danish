@@ -47,8 +47,8 @@ def save_atributions_to_file(atributions, file_name):
             fp.write("%s\n" % item)
 
 
-def calculate_prediction_tokens(input, tokenizer):
-    the_scores, output_attentions = predict(input)
+def calculate_prediction_tokens(model,input, tokenizer):
+    the_scores, output_attentions = predict(model, input)
     output_attentions_all = torch.stack(output_attentions).squeeze()
     predicted_ids = torch.argmax(the_scores, dim=-1).squeeze()
     all_tokens = tokenizer.convert_ids_to_tokens(predicted_ids)
