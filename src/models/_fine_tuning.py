@@ -12,13 +12,18 @@ from torch_audiomentations import SomeOf,AddBackgroundNoise, Gain, ApplyImpulseR
 
 
 class Fine_tuner():
-    def __init__(self, model, train_dataset, eval_dataset, data_collator ,batch_size = 8):
+    def __init__(self, model, train_dataset, eval_dataset, data_collator,data_augmentation = True, ewc =True ,batch_size = 8):
         self.train_dataloader = DataLoader(train_dataset, shuffle=True, batch_size = batch_size,collate_fn=data_collator)
         self.eval_dataloader = DataLoader(eval_dataset, batch_size = batch_size,collate_fn=data_collator)
         self.model = model
+        if data_augmentation:
+            self.init_augmentations(noise_dir = '/zhome/2f/8/153764/Desktop/test/paradeigmata/noise',
+                                     room_dir = '/zhome/2f/8/153764/Desktop/test/paradeigmata/room')
+        if ewc:
+            self.the_penaldy = EWC_Pemalty()
 
-        noise_dir = '/zhome/2f/8/153764/Desktop/test/paradeigmata/noise'
-        room_dir = '/zhome/2f/8/153764/Desktop/test/paradeigmata/room'
+
+    def init_augmentations(self,noise_dir,room_dir):
         transforms = [
             Gain(
                 min_gain_in_db=-2.0,
@@ -31,7 +36,7 @@ class Fine_tuner():
             PitchShift(sample_rate=16000,min_transpose_semitones=-2,max_transpose_semitones=2,p=0.9)
         ]
         self.augmentation = SomeOf((1, 3),transforms,p=0.8)
-        self.the_penaldy = EWC_Pemalty()
+
 
     def compute_metrics(self, pred, reference_labels, processor):
         wer_metric = load("wer")
@@ -72,23 +77,26 @@ class Fine_tuner():
         the_losses = []
         for epoch in range(num_epochs):
             train_wer = []
-            train_loss = []
             for batch in self.train_dataloader:
                         
                 batch = {k: v.to(device) for k, v in batch.items()}
-                batch['input_values'] = time_stretch(
-                                    self.augmentation(
-                                    batch['input_values'].unsqueeze(dim=1),sample_rate=16000),
-                                    random.uniform(1, 1.2),sample_rate=16000).squeeze(dim=1)
+                
+                if self.augmentation:
+                    batch['input_values'] = time_stretch(
+                                        self.augmentation(
+                                        batch['input_values'].unsqueeze(dim=1),sample_rate=16000),
+                                        random.uniform(1, 1.2),sample_rate=16000).squeeze(dim=1)
+                
                 label_str = processor.batch_decode(batch['labels'], group_tokens=False)
                 outputs = self.model(**batch)
-                importance = 1000
+                if self.the_penaldy:
+                    importance = 1000
+                else:
+                    importance = 0
                 loss = outputs.loss+ importance * self.the_penaldy.penalty(self.model)
                 
             
                 loss.backward()
-                train_loss.append(loss)
-
                 optimizer.step()
                 lr_scheduler.step()
                 optimizer.zero_grad()
@@ -97,10 +105,9 @@ class Fine_tuner():
                 train_wer.append(self.compute_metrics(outputs,label_str,processor))         
            
             av_train_wer = sum(train_wer)/len(train_wer)
-            av_train_loss = sum(train_loss)/len(train_loss)
             evaluation_wer = self.evaluate_model(processor)
 
 
-            print("\'train_loss\': " + str(av_train_loss) + "\'train_wer\': " + str(av_train_wer) + ", \'eval_wer\': " + str(evaluation_wer) + "}")
-            the_losses.append("\'train_loss\': " + str(av_train_loss) + "\'train_wer\': " + str(av_train_wer) + ", \'eval_wer\': " + str(evaluation_wer) + "}")
+            print("\'train_wer\': " + str(av_train_wer) + ", \'eval_wer\': " + str(evaluation_wer) + "}")
+            the_losses.append("\'train_wer\': " + str(av_train_wer) + ", \'eval_wer\': " + str(evaluation_wer) + "}")
         return the_losses
