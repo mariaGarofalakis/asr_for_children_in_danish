@@ -3,10 +3,10 @@ from torch.optim import AdamW
 import torch
 import random
 from tqdm.auto import tqdm
-from  evaluate import load
+from evaluate import load
 from transformers import get_scheduler
-from ewc.ewc_penalty import EWC_Pemalty
-from data_augmentation._data_augmentation import Data_augmentation
+from src.ewc.ewc_penalty import EWC_Pemalty
+from src.data_augmentation._data_augmentation import Data_augmentation
 
 class Fine_tuner():
     def __init__(self, model, train_dataset, eval_dataset, data_collator,data_augmentation = True, ewc =True ,batch_size = 8):
@@ -16,7 +16,7 @@ class Fine_tuner():
         if data_augmentation:
             self.augmentation = Data_augmentation()
         if ewc:
-            self.the_penaldy = EWC_Pemalty()
+            self.the_penaldy = EWC_Pemalty(self.model)
 
 
     def compute_metrics(self, pred, reference_labels, processor):

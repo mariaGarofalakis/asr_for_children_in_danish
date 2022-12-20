@@ -41,7 +41,7 @@ if __name__ == "__main__":
     parser.add_argument("-model_checkpoint", default="chcaa/xls-r-300m-danish-nst-cv9", type=str)
     parser.add_argument("-batch_size", default=4, type=int)
     parser.add_argument("-num_epochs", default=100, type=int)
-    parser.add_argument("-dataset_dir", default="/zhome/2f/8/153764/Desktop/the_project/ASR_for_children_in_danish/data/fine_tuning_dataset/", type=str)
+    parser.add_argument("-dataset_dir", default="/zhome/2f/8/153764/Desktop/the_project/ASR_for_children_in_danish/fine_tuning_dataset/", type=str)
     parser.add_argument("-dataset_name", default="fine_tuning_dataset", type=str)
     parser.add_argument("-data_augm", default=True, type=bool)
     parser.add_argument("-ewc", default=True, type=bool)

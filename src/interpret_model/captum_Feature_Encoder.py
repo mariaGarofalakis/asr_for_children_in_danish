@@ -77,7 +77,7 @@ def calculate_feature_encoder():
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("-dataset_dir", default="/zhome/2f/8/153764/Desktop/the_project/ASR_for_children_in_danish/data/fine_tuning_dataset/", type=str)
+    parser.add_argument("-dataset_dir", default="/zhome/2f/8/153764/Desktop/the_project/ASR_for_children_in_danish/fine_tuning_dataset/", type=str)
     parser.add_argument("-dataset_name", default="fine_tuning_dataset", type=str)
 
     
