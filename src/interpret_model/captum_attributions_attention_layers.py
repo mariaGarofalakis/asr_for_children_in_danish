@@ -12,6 +12,14 @@ if torch.__version__ >= '1.7.0':
 else:
     norm_fn = torch.norm
 
+def predict(inputs,model):
+
+    del inputs['input_length']
+
+    inputs['input_values'] = interpret_model_utilis.var2device(torch.unsqueeze(torch.FloatTensor(inputs['input_values']), dim=0))
+    inputs['labels'] = torch.FloatTensor(inputs['labels'])
+    output = model(**inputs)
+    return output.logits,  output.attentions
 
 def visualize_token2head_scores(scores_mat,all_tokens):
     fig = plt.figure(figsize=(30, 50))
@@ -30,7 +38,7 @@ def visualize_token2head_scores(scores_mat,all_tokens):
         fig.colorbar(im, fraction=0.046, pad=0.04)
     plt.tight_layout()
     plt.show()
-    plt.savefig('/zhome/2f/8/153764/Desktop/the_project/ASR_for_children_in_danish/interpret_model/results/attention_token_to_head.png')
+    plt.savefig('/zhome/2f/8/153764/Desktop/the_project/ASR_for_children_in_danish/src/interpret_model/results//attention_token_to_head.png')
 
 def visualize_token2token_scores(scores_mat,all_tokens, x_label_name='Head'):
     fig = plt.figure(figsize=(20, 20))
@@ -49,7 +57,7 @@ def visualize_token2token_scores(scores_mat,all_tokens, x_label_name='Head'):
         fig.colorbar(im, fraction=0.046)
     plt.tight_layout(pad=5)
     plt.show()
-    plt.savefig('/zhome/2f/8/153764/Desktop/the_project/ASR_for_children_in_danish/interpret_model/results/attention_token_to_token.png')
+    plt.savefig('/zhome/2f/8/153764/Desktop/the_project/ASR_for_children_in_danish/src/interpret_model/results/attention_token_to_token.png')
 
 
 
@@ -58,9 +66,9 @@ def attention_layers_attributions():
     dataset_name = args.dataset_name
 
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-    model_checkpoint = "/zhome/2f/8/153764/Desktop/the_project/ASR_for_children_in_danish/final_model/"
+    model_checkpoint = "chcaa/xls-r-300m-danish-nst-cv9"
     model = Wav2Vec2ForCTC.from_pretrained(
-        "/zhome/2f/8/153764/Desktop/the_project/ASR_for_children_in_danishs/save_processor/", output_attentions=True)
+        "chcaa/xls-r-300m-danish-nst-cv9", output_attentions=True)
     model.to(device)
     model.eval()
     model.zero_grad()
@@ -83,7 +91,10 @@ def attention_layers_attributions():
 
     #Interpreting Layer Outputs and Self-Attention Matrices in each Layer
     inputs, ref_value =  interpret_model_utilis.input_reference_pair(evaluation_data[20])
-    the_tokens = interpret_model_utilis.calculate_prediction_tokens(evaluation_data[20],tokenizer)
+    the_scores, output_attentions = predict(evaluation_data[20],model)
+
+    output_attentions_all = torch.stack(output_attentions).squeeze()
+    the_tokens = interpret_model_utilis.calculate_prediction_tokens(model,evaluation_data[20],tokenizer)
 
 
     num_heads = 16
@@ -94,7 +105,7 @@ def attention_layers_attributions():
 
     la = LayerActivation(interpret_model_utilis.squad_pos_forward_func, layers)
 
-    value_layer_acts = la.attribute(inputs=inputs['input_values'])
+    value_layer_acts = la.attribute(inputs=inputs['input_values'],additional_forward_args=(model, 0))
     value_layer_acts = torch.stack(value_layer_acts)
     new_x_shape = value_layer_acts.size()[:-1] + (num_heads, head_size)
     value_layer_acts = value_layer_acts.view(*new_x_shape)

@@ -5,11 +5,12 @@ from transformers import Wav2Vec2ForCTC
 import torch
 from captum.attr import LayerConductance
 import matplotlib.pyplot as plt
-
+import numpy as np
 import seaborn as sns
 
 
 def plot_layers_heatmap(scores):
+  
     fig, axs = plt.subplots(3,3)
     fig.suptitle('Feature Encoder Layer Attributions')
     fig.tight_layout(pad=1.7)
@@ -34,7 +35,7 @@ def plot_layers_heatmap(scores):
 
 
     plt.show()
-    plt.savefig('/zhome/2f/8/153764/Desktop/the_project/ASR_for_children_in_danish/interpret_model/results/Feature_enco.png')
+    plt.savefig('/zhome/2f/8/153764/Desktop/the_project/ASR_for_children_in_danish/src/interpret_model/results/Feature_enco.png')
 
 
 
@@ -43,9 +44,9 @@ def calculate_feature_encoder():
     dataset_name = args.dataset_name
 
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-    model_checkpoint = "/zhome/2f/8/153764/Desktop/the_project/ASR_for_children_in_danish/final_model/"
+    model_checkpoint = "chcaa/xls-r-300m-danish-nst-cv9"
     model = Wav2Vec2ForCTC.from_pretrained(
-        "/zhome/2f/8/153764/Desktop/the_project/ASR_for_children_in_danishs/save_processor/", output_attentions=True)
+        "chcaa/xls-r-300m-danish-nst-cv9", output_attentions=True)
     model.to(device)
     model.eval()
     model.zero_grad()
@@ -59,17 +60,18 @@ def calculate_feature_encoder():
     scores = []
 
     for itr,the_layer in enumerate(model.wav2vec2.feature_extractor.conv_layers):
-
+    
         lc = LayerConductance(interpret_model_utilis.squad_pos_forward_func, the_layer)
 
         feature_encoder, error = lc.attribute(inputs=inputs['input_values'],
                                         baselines=ref_value['input_values'],
+                                        additional_forward_args=(model, 0),
                                         return_convergence_delta=True)
         feature_encoder = feature_encoder.cpu().detach().tolist()
 
-        scores.append(feature_encoder)
+        scores.append(np.squeeze(np.array(feature_encoder)))
 
-        interpret_model_utilis.save_atributions_to_file(feature_encoder,'/zhome/2f/8/153764/Desktop/the_project/ASR_for_children_in_danish/interpret_model/results/feature_encoder/feature_encoder_layer_atr/'+str(itr)+'.txt')
+    interpret_model_utilis.save_atributions_to_file(feature_encoder,'/zhome/2f/8/153764/Desktop/the_project/ASR_for_children_in_danish/src/interpret_model/results/feature_encoder_layer'+str(itr)+'.txt')
     return scores
 
 if __name__ == "__main__":

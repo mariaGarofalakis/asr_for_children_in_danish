@@ -17,14 +17,14 @@ def predict(model, inputs):
     return output.logits,  output.attentions
 
 
-def squad_pos_forward_func(inputs, token_type_ids=None, position_ids=None, attention_mask=None, position=0):
-    pred , _= predict(inputs)
+def squad_pos_forward_func(inputs, model, position=0):
+    pred , _= predict(model, inputs)
     pred = pred[position]
     return pred.max(1).values
 
 
-def input_reference_pair(input_data):
-    inputs = input_data
+def input_reference_pair(inputs):
+
     del inputs['input_length']
     inputs['input_values'] = var2device(torch.unsqueeze(torch.FloatTensor(inputs['input_values']), dim=0))
     inputs['labels'] = var2device(torch.FloatTensor(inputs['labels']))
@@ -48,9 +48,13 @@ def save_atributions_to_file(atributions, file_name):
 
 
 def calculate_prediction_tokens(model,input, tokenizer):
-    the_scores, output_attentions = predict(model, input)
-    output_attentions_all = torch.stack(output_attentions).squeeze()
-    predicted_ids = torch.argmax(the_scores, dim=-1).squeeze()
+
+    del input['input_length']
+    input['input_values'] = var2device(torch.unsqueeze(torch.FloatTensor(input['input_values']), dim=0))
+    input['labels'] = torch.FloatTensor(input['labels'])
+    the_scores = model(**input)
+
+    predicted_ids = torch.argmax(the_scores.logits, dim=-1).squeeze()
     all_tokens = tokenizer.convert_ids_to_tokens(predicted_ids)
     the_tokens = [sub.replace('<pad>','') for sub in all_tokens]
 
