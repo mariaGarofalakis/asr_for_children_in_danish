@@ -1,8 +1,5 @@
 import torch
 from torch.autograd import Variable
-import numpy as np
-import matplotlib.pyplot as plt
-
 
 
 def var2device(t: torch.Tensor, use_cuda=True, **kwargs):

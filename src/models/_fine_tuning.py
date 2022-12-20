@@ -4,12 +4,9 @@ import torch
 import random
 from tqdm.auto import tqdm
 from  evaluate import load
-import numpy as np
 from transformers import get_scheduler
-from ewq_penalty import EWC_Pemalty
-from torch_time_stretch import time_stretch
-from torch_audiomentations import SomeOf,AddBackgroundNoise, Gain, ApplyImpulseResponse,PitchShift
-
+from ewc.ewc_penalty import EWC_Pemalty
+from data_augmentation._data_augmentation import Data_augmentation
 
 class Fine_tuner():
     def __init__(self, model, train_dataset, eval_dataset, data_collator,data_augmentation = True, ewc =True ,batch_size = 8):
@@ -17,25 +14,9 @@ class Fine_tuner():
         self.eval_dataloader = DataLoader(eval_dataset, batch_size = batch_size,collate_fn=data_collator)
         self.model = model
         if data_augmentation:
-            self.init_augmentations(noise_dir = '/zhome/2f/8/153764/Desktop/test/paradeigmata/noise',
-                                     room_dir = '/zhome/2f/8/153764/Desktop/test/paradeigmata/room')
+            self.augmentation = Data_augmentation()
         if ewc:
             self.the_penaldy = EWC_Pemalty()
-
-
-    def init_augmentations(self,noise_dir,room_dir):
-        transforms = [
-            Gain(
-                min_gain_in_db=-2.0,
-                max_gain_in_db=5.0,
-                p=0.8
-
-            ),
-            AddBackgroundNoise(background_paths= noise_dir,min_snr_in_db =  7.0, max_snr_in_db = 15.0,p=0.5),
-            ApplyImpulseResponse(room_dir,p=0.5),
-            PitchShift(sample_rate=16000,min_transpose_semitones=-2,max_transpose_semitones=2,p=0.9)
-        ]
-        self.augmentation = SomeOf((1, 3),transforms,p=0.8)
 
 
     def compute_metrics(self, pred, reference_labels, processor):
@@ -82,17 +63,15 @@ class Fine_tuner():
                 batch = {k: v.to(device) for k, v in batch.items()}
                 
                 if self.augmentation:
-                    batch['input_values'] = time_stretch(
-                                        self.augmentation(
-                                        batch['input_values'].unsqueeze(dim=1),sample_rate=16000),
-                                        random.uniform(1, 1.2),sample_rate=16000).squeeze(dim=1)
-                
+                    batch['input_values'] = self.augmentation.perform_data_augmentation(batch['input_values'].unsqueeze(dim=1)).squeeze(dim=1)
+                    
                 label_str = processor.batch_decode(batch['labels'], group_tokens=False)
                 outputs = self.model(**batch)
                 if self.the_penaldy:
                     importance = 1000
                 else:
                     importance = 0
+
                 loss = outputs.loss+ importance * self.the_penaldy.penalty(self.model)
                 
             
