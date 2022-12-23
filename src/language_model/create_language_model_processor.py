@@ -16,6 +16,7 @@ with open("5gram.arpa", "r") as read_file, open("5gram_correct.arpa", "w") as wr
     else:
       write_file.write(line)
 
+processor = AutoProcessor.from_pretrained("chcaa/xls-r-300m-danish-nst-cv9")
 vocab_dict = processor.tokenizer.get_vocab()
 sorted_vocab_dict = {k.lower(): v for k, v in sorted(vocab_dict.items(), key=lambda item: item[1])}
 
@@ -30,6 +31,6 @@ processor_with_lm = Wav2Vec2ProcessorWithLM(
     decoder=decoder
 )
 
-processor_with_lm.save_pretrained("AAAAAA2")
+processor_with_lm.save_pretrained("the_language_model_processor")
 
 

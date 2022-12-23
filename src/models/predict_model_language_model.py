@@ -13,7 +13,7 @@ ds = load_dataset("Alvenir/alvenir_asr_da_eval", split="test")
 ds = ds.cast_column("audio", Audio(sampling_rate=16_000))
 
 
-processor = Wav2Vec2ProcessorWithLM.from_pretrained("/zhome/2f/8/153764/Desktop/the_project/ASR_for_children_in_danish/src/language_model/save_processor_lm")
+processor = Wav2Vec2ProcessorWithLM.from_pretrained("/zhome/2f/8/153764/Desktop/the_project/ASR_for_children_in_danish/src/language_model/the_language_model_processor")
 
 
 model = Wav2Vec2ForCTC.from_pretrained(

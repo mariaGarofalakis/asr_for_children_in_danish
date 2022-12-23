@@ -36,5 +36,5 @@ class CustomTrainer(Trainer):
         loss = outputs["loss"] if isinstance(outputs, dict) else outputs[0]
         if self.penalty:
             importance = 1000
-            loss = loss + importance * self.penalty(self.model)  
+            loss = loss + importance * self.penalty.penalty(self.model)  
         return (loss, outputs) if return_outputs else loss

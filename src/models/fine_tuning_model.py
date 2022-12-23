@@ -3,7 +3,7 @@ from transformers import TrainingArguments, AutoModelForCTC
 from src.data.make_dataset import DatasetBuilding
 from src.models._costum_trainer import CustomTrainer
 from src.data._data_set import DanDataset
-from src.models._utils import Metrics, DataCollatorCTCWithPadding, CustomCallback
+from src.models._utils import Metrics, DataCollatorCTCWithPadding, CustomCallback, save_model_info
 from src.ewc.ewc_penalty import EWC_Pemalty
 from src.data_augmentation._data_augmentation import Data_augmentation
 
