@@ -10,7 +10,7 @@ pip install https://github.com/kpu/kenlm/archive/master.zip
 sudo apt install build-essential cmake libboost-system-dev libboost-thread-dev libboost-program-options-dev libboost-test-dev libeigen3-dev zlib1g-dev libbz2-dev liblzma-dev
 wget -O - https://kheafield.com/code/kenlm.tar.gz | tar xz
 mkdir kenlm/build && cd kenlm/build && cmake .. && make -j2
-ls kenlm/build/bin
+
 ```
 then execute the file **language_model_dataset.py** in order to extract the .txt  file which you are going to give as input to **kenlm/build/bin/lmplz**, in other words execute the shell comand:
 
