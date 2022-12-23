@@ -2,7 +2,8 @@
 In order to create a language model to boost the ASR model follow the steps from [link](https://huggingface.co/blog/wav2vec2-with-ngram)
 
 Firstly we have to set up the appropriate enviroment and the folders for the kenlm:
-cd to asr_for_children_in_danish/src/language_model and execute
+
+**cd to asr_for_children_in_danish/src/language_model and execute**
 ```
 pip install datasets transformers
 pip install https://github.com/kpu/kenlm/archive/master.zip pyctcdecode
