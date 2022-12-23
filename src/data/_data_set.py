@@ -46,7 +46,7 @@ class DanDataset(torch.utils.data.Dataset):
 
         if self.do_augmentation:
 
-            input = torch.squeeze(self.get_augmentation(torch.FloatTensor(self.dset['input_values'][idx])),0).tolist()
+            input = torch.squeeze(self.get_augmentation(torch.FloatTensor(self.dset['input_values'][idx])),0)
         else:
             input = torch.FloatTensor(self.dset['input_values'][idx])
         

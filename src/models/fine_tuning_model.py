@@ -5,6 +5,7 @@ from src.models._costum_trainer import CustomTrainer
 from src.data._data_set import DanDataset
 from src.models._utils import Metrics, DataCollatorCTCWithPadding, CustomCallback
 from src.ewc.ewc_penalty import EWC_Pemalty
+from src.data_augmentation._data_augmentation import Data_augmentation
 
 class Model_fine_tuning(object):
     def __init__(self):
@@ -22,9 +23,6 @@ class Model_fine_tuning(object):
         ewc = args.ewc
         dataset = DatasetBuilding(self.dataset_name, self.dataset_dir)
         train_data, evaluation_data = dataset.make_dataset(self.model_checkpoint)
-        train_dataset = DanDataset(train_data,data_augmentation)
-        val_dataset = DanDataset(evaluation_data,data_augmentation)
-
         
 
         data_collator = DataCollatorCTCWithPadding(processor=dataset.processor, padding=True)
@@ -63,8 +61,8 @@ class Model_fine_tuning(object):
             data_collator=data_collator,
             args=training_args,
             compute_metrics=metrics.compute_metrics,
-            train_dataset=train_dataset,
-            eval_dataset=val_dataset,
+            train_dataset=train_data,
+            eval_dataset=evaluation_data,
             tokenizer=dataset.processor.feature_extractor,
         )
         if ewc:
@@ -72,6 +70,12 @@ class Model_fine_tuning(object):
             trainer.set_penalty(the_penaldy)
         else:
             trainer.set_penalty(None)
+
+        if data_augmentation:
+            the_augmentation = Data_augmentation()
+            trainer.set_augmentation(the_augmentation)
+        else:
+            trainer.set_augmentation(None)
 
         trainer.add_callback(CustomCallback(trainer))
         trainer.train()
