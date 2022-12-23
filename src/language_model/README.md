@@ -1,4 +1,4 @@
-# ASR_for_children_in_danish
+# Language model creation steps
 In order to create a language model to boost the ASR model follow the steps from [link](https://huggingface.co/blog/wav2vec2-with-ngram)
 
 Firstly we have to set up the appropriate enviroment and the folders for the kenlm:
