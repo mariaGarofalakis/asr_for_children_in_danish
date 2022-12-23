@@ -12,8 +12,9 @@ sudo apt install build-essential cmake libboost-system-dev libboost-thread-dev l
 wget -O - https://kheafield.com/code/kenlm.tar.gz | tar xz
 mkdir kenlm/build && cd kenlm/build && cmake .. && make -j2
 ```
-then execute the file **language_model_dataset.py** in order to extract the .txt  file which you are going to give as input to **kenlm/build/bin/lmplz**, in other words execute the shell comand ("/src/language_model/text.txt" is the path to the .txt file):
 **cd ../../** go buck two -> language model directory
+then execute the file **language_model_dataset.py** in order to extract the .txt  file which you are going to give as input to **kenlm/build/bin/lmplz**, in other words execute the shell comand ("/src/language_model/text.txt" is the path to the .txt file):
+
 ```
 kenlm/build/bin/lmplz -o 5 <"text.txt" > "5gram.arpa"
 ```
