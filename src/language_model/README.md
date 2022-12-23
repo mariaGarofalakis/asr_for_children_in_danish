@@ -6,8 +6,7 @@ Firstly we have to set up the appropriate enviroment and the folders for the ken
 **cd to asr_for_children_in_danish/src/language_model and execute**
 ```
 pip install datasets transformers
-pip install https://github.com/kpu/kenlm/archive/master.zip pyctcdecode
-pip install https://github.com/kpu/kenlm/archive/master.zip
+pip install pyctcdecode
 sudo apt install build-essential cmake libboost-system-dev libboost-thread-dev libboost-program-options-dev libboost-test-dev libeigen3-dev zlib1g-dev libbz2-dev liblzma-dev
 wget -O - https://kheafield.com/code/kenlm.tar.gz | tar xz
 mkdir kenlm/build && cd kenlm/build && cmake .. && make -j2
