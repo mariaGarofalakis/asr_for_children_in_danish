@@ -13,9 +13,9 @@ wget -O - https://kheafield.com/code/kenlm.tar.gz | tar xz
 mkdir kenlm/build && cd kenlm/build && cmake .. && make -j2
 ```
 then execute the file **language_model_dataset.py** in order to extract the .txt  file which you are going to give as input to **kenlm/build/bin/lmplz**, in other words execute the shell comand ("/src/language_model/text.txt" is the path to the .txt file):
-
+**cd ../../** go buck two -> language model directory
 ```
-kenlm/build/bin/lmplz -o 5 <"/src/language_model/text.txt" > "5gram.arpa"
+kenlm/build/bin/lmplz -o 5 <"text.txt" > "5gram.arpa"
 ```
 
 Where text.txt is the file we extracted from the **language_model_dataset.py**, but it could be just any file of the same form.
