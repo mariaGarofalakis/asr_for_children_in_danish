@@ -18,7 +18,7 @@ class EWC(object):
         device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
         self.model = model.to(device) #pretrained model
         self.dataset = dataset #samples from the old task or tasks
-        print(type(self.dataset))
+        
         
         # n is the string name of the parameter matrix p, aka theta, aka weights
         # in self.params we reference all of those weights that are open to
@@ -29,8 +29,7 @@ class EWC(object):
         # we need this to calculate (𝜃 - 𝜃∗A)^2 because self.params will be changing 
         # upon every backward pass and parameter update by the optimizer
         self._means = {}
-        print('AAAAAAAAAAAAA')
-        print(type(p))
+        
         for n, p in deepcopy(self.params).items():
             self._means[n] = var2device(p.data)
         
@@ -63,7 +62,8 @@ class EWC(object):
             # remove channel dim, these are greyscale, not color rgb images
             # bs,1,h,w -> bs,h,w
             del input['input_length']
-            input['input_values']=var2device(input['input_values'])
+            input['input_values'] = var2device(torch.unsqueeze(torch.FloatTensor(input['input_values']), dim=0))
+            input['labels'] = var2device(torch.FloatTensor(input['labels']))
        
             outputs = self.model(**input)
             loss = outputs.loss

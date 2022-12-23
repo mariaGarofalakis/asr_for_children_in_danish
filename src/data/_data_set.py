@@ -31,20 +31,14 @@ class DanDataset(torch.utils.data.Dataset):
         self.augmentation = SomeOf((1, 3),transforms,p=0.8)
 
 
-    def get_augmentation(self, audio):
+    def get_augmentation(self, inputs):
         
-        sf.write('/zhome/2f/8/153764/Desktop/test/paradeigmata/arxiko_AAAAAAAAAAAa'+str(step)+'.wav',
-                         the_audio.to(torch.float32), 16000)
-               
+         
         aug_audio = time_stretch(
                                 self.augmentation(
-                                inputs['input_values'].unsqueeze(dim=1).to("cuda:0"),sample_rate=16000),
-                                random.uniform(1, 1.2),sample_rate=16000)
-                                .squeeze(dim=1)
-        sf.write('/zhome/2f/8/153764/Desktop/test/paradeigmata/augmented_AAAAAAAAAAAa'+str(step)+'.wav',
-                         aug_audio[0].to(torch.float32).to("cpu"), 16000)
-
-
+                                inputs.unsqueeze(dim=1).to("cuda:0"),sample_rate=16000),
+                                random.uniform(1, 1.2),sample_rate=16000).squeeze(dim=1)
+        
         return aug_audio
 
 
@@ -52,11 +46,11 @@ class DanDataset(torch.utils.data.Dataset):
 
         if self.do_augmentation:
 
-            input = torch.squeeze(self.get_augmentation(self.dset['input_values'][idx]),0).tolist()
+            input = torch.squeeze(self.get_augmentation(torch.FloatTensor(self.dset['input_values'][idx])),0).tolist()
         else:
-            input = self.dset['input_values'][idx]
+            input = torch.FloatTensor(self.dset['input_values'][idx])
         
-        return {'input_values': input, 'labels': self.dset['labels'][idx]}
+        return {'input_values': input, 'labels': torch.FloatTensor(self.dset['labels'][idx])}
 
     def __len__(self):
         return len(self.dset)

@@ -3,18 +3,32 @@ import torch
 import numpy as np
 from typing import Dict, List, Union
 from dataclasses import dataclass
-from transformers import Wav2Vec2Processor, TrainerCallback
+from transformers import Wav2Vec2Processor, TrainerCallback, Trainer
 from datasets import load_metric
 
-def save_model_info(model, processor, the_losses):
+def save_model_info(model, processor, trainer):
     model.save_pretrained("/zhome/2f/8/153764/Desktop/the_project/ASR_for_children_in_danish/final_model")
     processor.save_pretrained("/zhome/2f/8/153764/Desktop/the_project/ASR_for_children_in_danish/save_processor")
 
-    
-    with open('the_loss_file.txt', 'w') as f:
-        for log_history in the_losses:
+    with open('"/zhome/2f/8/153764/Desktop/the_project/ASR_for_children_in_danish/the_loss_file.txt', 'w') as f:
+        for log_history in trainer.state.log_history:
             print(log_history, file=f)
 
+
+def get_parameter_names(model, forbidden_layer_types):
+            """
+            Returns the names of the model parameters that are not inside a forbidden layer.
+            """
+            result = []
+            for name, child in model.named_children():
+                result += [
+                    f"{name}.{n}"
+                    for n in get_parameter_names(child, forbidden_layer_types)
+                    if not isinstance(child, tuple(forbidden_layer_types))
+                ]
+            # Add model specific parameters (defined with nn.Parameter) since they are not in any child.
+            result += list(model._parameters.keys())
+            return result
 class Metrics():
     def __init__(self, dataset):
         self.dataset = dataset

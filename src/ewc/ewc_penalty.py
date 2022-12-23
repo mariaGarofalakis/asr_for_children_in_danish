@@ -20,6 +20,7 @@ class EWC_Pemalty(object):
         fisher_matrix_path = '/zhome/2f/8/153764/Desktop/the_project/ASR_for_children_in_danish/src/ewc/fisher_info_results/fisher_matrix.pth'
 
         if not((os.path.exists(old_task_parameters_path)) & (os.path.exists(fisher_matrix_path))):
+     
             self.calculate_fisher_info_matrix(model,dataset_name, dataset_dir, model_checkpoint)      
         self.old_task_parameters = torch.load(old_task_parameters_path,map_location=device)
         self.fisher_matrix = torch.load(fisher_matrix_path,map_location=device)
@@ -36,7 +37,5 @@ class EWC_Pemalty(object):
         # here we get a sample from the dataset of the pre-trained model (common voice)
         dataset = DatasetBuilding(dataset_name, dataset_dir)
         train_data, evaluation_data = dataset.make_dataset(model_checkpoint)
-        train_data['input_values'] = torch.FloatTensor(train_data['input_values'])
-        train_data['labels'] = torch.FloatTensor(train_data['labels'])
         train_dataloader = DataLoader(train_data, shuffle=True, batch_size=1)
         EWC(model, train_dataloader)

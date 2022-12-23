@@ -1,5 +1,6 @@
 from torch.utils.data import DataLoader
-from torch.optim import AdamW
+#from torch.optim import AdamW
+from transformers.optimization import AdamW
 import torch
 import random
 from tqdm.auto import tqdm
@@ -7,6 +8,7 @@ from evaluate import load
 from transformers import get_scheduler
 from src.ewc.ewc_penalty import EWC_Pemalty
 from src.data_augmentation._data_augmentation import Data_augmentation
+from src.models._utils import get_parameter_names
 
 class Fine_tuner():
     def __init__(self, model, train_dataset, eval_dataset, data_collator,data_augmentation = True, ewc =True ,batch_size = 8):
@@ -17,6 +19,38 @@ class Fine_tuner():
             self.augmentation = Data_augmentation()
         if ewc:
             self.the_penaldy = EWC_Pemalty(self.model)
+
+        
+
+    def create_optimizer(self,learning_rate,weight_decay):
+        """
+        Setup the optimizer.
+
+        We provide a reasonable default that works well. If you want to use something else, you can pass a tuple in the
+        Trainer's init through `optimizers`, or subclass and override this method in a subclass.
+        """
+        opt_model = self.model
+        ALL_LAYERNORM_LAYERS = [torch.nn.LayerNorm]
+
+        
+        decay_parameters = get_parameter_names(opt_model, ALL_LAYERNORM_LAYERS)
+        decay_parameters = [name for name in decay_parameters if "bias" not in name]
+        optimizer_grouped_parameters = [
+            {
+                "params": [p for n, p in opt_model.named_parameters() if n in decay_parameters],
+                "weight_decay": weight_decay,
+            },
+            {
+                "params": [p for n, p in opt_model.named_parameters() if n not in decay_parameters],
+                "weight_decay": 0.0,
+            },
+        ]
+    
+        optimizer_cls = AdamW
+        optimizer_kwargs = {'lr': learning_rate, 'betas': (0.9, 0.999), 'eps': 1e-08}
+        self.optimizer = optimizer_cls(optimizer_grouped_parameters, **optimizer_kwargs)
+                
+        return self.optimizer
 
 
     def compute_metrics(self, pred, reference_labels, processor):
@@ -41,11 +75,12 @@ class Fine_tuner():
         return sum(evaluation_wer)/len(evaluation_wer)
         
 
-    def fine_tuning_process(self, processor, num_epochs, learning_rate):
-        optimizer = AdamW(self.model.parameters(), lr=learning_rate)
+    def fine_tuning_process(self, processor, num_epochs, learning_rate,weight_decay):
+        self.create_optimizer(learning_rate,weight_decay)
+   #     optimizer = AdamW(self.model.parameters(), lr=learning_rate)
         num_training_steps = num_epochs * len(self.train_dataloader)
         lr_scheduler = get_scheduler(name="linear", 
-                                     optimizer=optimizer, 
+                                     optimizer=self.optimizer, 
                                      num_warmup_steps=0, 
                                      num_training_steps=num_training_steps)
 
@@ -76,9 +111,9 @@ class Fine_tuner():
                 
             
                 loss.backward()
-                optimizer.step()
+                self.optimizer.step()
                 lr_scheduler.step()
-                optimizer.zero_grad()
+                self.optimizer.zero_grad()
                 progress_bar.update(1)
 
                 train_wer.append(self.compute_metrics(outputs,label_str,processor))         
