@@ -10,18 +10,18 @@ class EWC_Pemalty(object):
     
     def __init__(self, 
                  model,
-                 dataset_name = 'baseline_model_dataset', 
-                 dataset_dir = '/zhome/2f/8/153764/Desktop/the_project/ASR_for_children_in_danish/baseline_model_dataset/',
+                 dataset_name, 
+                 dataset_dir,
+                 absolute_path,
                  model_checkpoint = "chcaa/xls-r-300m-danish-nst-cv9"):
         
         device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
-        old_task_parameters_path = '/zhome/2f/8/153764/Desktop/the_project/ASR_for_children_in_danish/src/ewc/fisher_info_results/old_task_parameters.pth'
-        fisher_matrix_path = '/zhome/2f/8/153764/Desktop/the_project/ASR_for_children_in_danish/src/ewc/fisher_info_results/fisher_matrix.pth'
+        old_task_parameters_path = os.path.join(absolute_path,'../../ewc/fisher_info_results/old_task_parameters.pth')
+        fisher_matrix_path = os.path.join(absolute_path,'../../ewc/fisher_info_results/fisher_matrix.pth')
 
         if not((os.path.exists(old_task_parameters_path)) & (os.path.exists(fisher_matrix_path))):
-     
-            self.calculate_fisher_info_matrix(model,dataset_name, dataset_dir, model_checkpoint)      
+            self.calculate_fisher_info_matrix(model,dataset_name, dataset_dir,absolute_path, model_checkpoint)      
         self.old_task_parameters = torch.load(old_task_parameters_path,map_location=device)
         self.fisher_matrix = torch.load(fisher_matrix_path,map_location=device)
 
@@ -32,10 +32,10 @@ class EWC_Pemalty(object):
             loss += _loss.sum()
         return loss
 
-    def calculate_fisher_info_matrix(self,model,dataset_name, dataset_dir,model_checkpoint):
+    def calculate_fisher_info_matrix(self,model,dataset_name, dataset_dir,the_absolute_path,model_checkpoint):
 
         # here we get a sample from the dataset of the pre-trained model (common voice)
         dataset = DatasetBuilding(dataset_name, dataset_dir)
         train_data, evaluation_data = dataset.make_dataset(model_checkpoint)
         train_dataloader = DataLoader(train_data, shuffle=True, batch_size=1)
-        EWC(model, train_dataloader)
+        EWC(model, train_dataloader, the_absolute_path)

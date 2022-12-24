@@ -1,11 +1,11 @@
 import random
+import os
 from torch_audiomentations import SomeOf,AddBackgroundNoise, Gain, ApplyImpulseResponse,PitchShift
 from torch_time_stretch import time_stretch
 
 class Data_augmentation(object):
     
-    def __init__(self, noise_dir = '/zhome/2f/8/153764/Desktop/test/paradeigmata/noise',
-                       room_dir = '/zhome/2f/8/153764/Desktop/test/paradeigmata/room'):
+    def __init__(self, noise_dir,room_dir):
         
         transforms = [
             Gain(

@@ -1,3 +1,4 @@
+import os
 import argparse
 from transformers import TrainingArguments, AutoModelForCTC
 from src.data.make_dataset import DatasetBuilding
@@ -6,6 +7,7 @@ from src.data._data_set import DanDataset
 from src.models._utils import Metrics, DataCollatorCTCWithPadding, CustomCallback, save_model_info
 from src.ewc.ewc_penalty import EWC_Pemalty
 from src.data_augmentation._data_augmentation import Data_augmentation
+
 
 class Model_fine_tuning(object):
     def __init__(self):
@@ -18,7 +20,7 @@ class Model_fine_tuning(object):
         self.model_checkpoint = args.model_checkpoint
 
 
-    def fine_tuning(self):
+    def fine_tuning(self,absolute_path):
         data_augmentation = args.data_augm
         ewc = args.ewc
         dataset = DatasetBuilding(self.dataset_name, self.dataset_dir)
@@ -38,7 +40,7 @@ class Model_fine_tuning(object):
         
 
         training_args = TrainingArguments(
-                                        output_dir='C:/Users/maria/Desktop/mathimata/diplwmatikh/test/model_check_points',
+                                        output_dir=os.path.join(absolute_path, "../../model_check_points"),
                                         group_by_length=True,
                                         per_device_train_batch_size=self.batch_size,
                                         gradient_accumulation_steps=500000,
@@ -66,13 +68,18 @@ class Model_fine_tuning(object):
             tokenizer=dataset.processor.feature_extractor,
         )
         if ewc:
-            the_penaldy = EWC_Pemalty(model)
+            the_penaldy = EWC_Pemalty(model = model,
+                                      dataset_name = 'baseline_model_dataset', 
+                                      dataset_dir = os.path.join(absolute_path,'../../baseline_model_dataset/'),
+                                      absolute_path = absolute_path)
             trainer.set_penalty(the_penaldy)
         else:
             trainer.set_penalty(None)
 
         if data_augmentation:
-            the_augmentation = Data_augmentation()
+            
+            the_augmentation = Data_augmentation(noise_dir=os.path.join(absolute_path,"../data_augmentation/noise"),
+                                                 room_dir=os.path.join(absolute_path,"../data_augmentation/room"))
             trainer.set_augmentation(the_augmentation)
         else:
             trainer.set_augmentation(None)
@@ -87,19 +94,18 @@ class Model_fine_tuning(object):
 
 if __name__ == "__main__":
 
+    absolute_path = os.path.dirname(__file__)
     parser = argparse.ArgumentParser()
     parser.add_argument("-lr", default=0.0003950115925060478, type=float)
     parser.add_argument("-weight_decay", default=0.005029742789944035, type=float)
     parser.add_argument("-model_checkpoint", default="chcaa/xls-r-300m-danish-nst-cv9", type=str)
     parser.add_argument("-batch_size", default=10, type=int)
     parser.add_argument("-num_epochs", default=100, type=int)
-    parser.add_argument("-dataset_dir", default="/zhome/2f/8/153764/Desktop/the_project/ASR_for_children_in_danish/fine_tuning_dataset/", type=str)
+    parser.add_argument("-dataset_dir", default=os.path.join(absolute_path, '../../fine_tuning_dataset'), type=str)
     parser.add_argument("-dataset_name", default="fine_tuning_dataset", type=str)
     parser.add_argument("-data_augm", default=True, type=bool)
     parser.add_argument("-ewc", default=True, type=bool)
-
-    
     args = parser.parse_args()
 
     fine_tuning_obj = Model_fine_tuning()
-    fine_tuning_obj.fine_tuning()
+    fine_tuning_obj.fine_tuning(absolute_path)

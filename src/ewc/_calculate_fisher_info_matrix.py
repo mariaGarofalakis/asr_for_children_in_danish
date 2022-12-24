@@ -14,7 +14,8 @@ class EWC(object):
     of the loss function
     """
     
-    def __init__(self, model, dataset):
+    def __init__(self, model, dataset,absolute_path):
+        self.absolute_path = absolute_path
         device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
         self.model = model.to(device) #pretrained model
         self.dataset = dataset #samples from the old task or tasks
@@ -38,7 +39,8 @@ class EWC(object):
 
 
     def _write_results_to_files(self, the_matrix, file_name):
-        torch.save(the_matrix, '/zhome/2f/8/153764/Desktop/the_project/ASR_for_children_in_danish/src/ewc/fisher_info_results/'+file_name +".pth")
+        path =  os.path.join(absolute_path, "../../ewc/fisher_info_results/")
+        torch.save(the_matrix, path+file_name +".pth")
 
 
 
