@@ -3,7 +3,11 @@ I implement an Automatic Speech Recognition (ASR) system in order to transcribe 
 
 
 # Execution
-Firstly is recomented to create a python virtual enviroment and install all project's requirements there in order to do so execute the command
+Firstly is recomented to create a python virtual enviroment and install all project's requirements there in order to do so execute the command:
+
+```
+pip install -r requirements.txt
+```
 
 
 python set_up.py install
