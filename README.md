@@ -7,7 +7,6 @@ Firstly is recomented to create a python virtual enviroment and install all proj
 
 ```
 pip install -r requirements.txt
+python set_up.py install
 ```
 
-
-python set_up.py install
