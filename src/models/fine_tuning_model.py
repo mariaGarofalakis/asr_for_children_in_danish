@@ -92,7 +92,7 @@ if __name__ == "__main__":
     parser.add_argument("-weight_decay", default=0.005029742789944035, type=float)
     parser.add_argument("-model_checkpoint", default="chcaa/xls-r-300m-danish-nst-cv9", type=str)
     parser.add_argument("-batch_size", default=10, type=int)
-    parser.add_argument("-num_epochs", default=1, type=int)
+    parser.add_argument("-num_epochs", default=100, type=int)
     parser.add_argument("-dataset_dir", default="/zhome/2f/8/153764/Desktop/the_project/ASR_for_children_in_danish/fine_tuning_dataset/", type=str)
     parser.add_argument("-dataset_name", default="fine_tuning_dataset", type=str)
     parser.add_argument("-data_augm", default=True, type=bool)
