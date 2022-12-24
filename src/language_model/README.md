@@ -14,7 +14,12 @@ mkdir kenlm/build && cd kenlm/build && cmake .. && make -j2
 **cd ../../** go buck two -> language model directory
 
 
-then execute the file **language_model_dataset.py** in order to extract the .txt  file which you are going to give as input to **kenlm/build/bin/lmplz**, in other words execute the shell comand ("/src/language_model/text.txt" is the path to the .txt file):
+then execute the python script:
+```
+language_model_dataset.py
+```
+
+ in order to extract the **.txt**  file which you are going to give as input to **kenlm/build/bin/lmplz**, in other words execute the shell comand ("/src/language_model/text.txt" is the path to the .txt file):
 
 ```
 kenlm/build/bin/lmplz -o 5 <"text.txt" > "5gram.arpa"
@@ -22,4 +27,8 @@ kenlm/build/bin/lmplz -o 5 <"text.txt" > "5gram.arpa"
 
 Where text.txt is the file we extracted from the **language_model_dataset.py**, but it could be just any file of the same form.
 
-Execute **create_language_model_processor.py** in order to get the language model processor
+Finally run the python file:
+```
+create_language_model_processor.py
+```
+in order to get the language model processor.
