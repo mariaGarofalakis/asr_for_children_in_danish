@@ -36,7 +36,7 @@ class TestDataset(datasets.GeneratorBasedBuilder):
 
     def _split_generators(self, dl_manager):
 
-        path_to_data = os.path.abspath(os.path.expanduser(dl_manager.manual_dir))
+        path_to_data = dl_manager._base_path
 
         if not os.path.exists(path_to_data):
             raise FileNotFoundError(
