@@ -3,10 +3,13 @@ I implement an Automatic Speech Recognition (ASR) system in order to transcribe 
 
 
 # Execution
-Firstly is recomented to create a python virtual enviroment and install all project's requirements there in order to do so execute the command:
+Firstly is recomented to create a python virtual enviroment and install all project's requirements. To install all project requirements cd to asr_for_children_in_danish (base directory) and execute:
+
 
 ```
 pip install -r requirements.txt
-python set_up.py install -e
 ```
-
+This will download and install all the required python packages in order to execute this project. Moving on in the same directory (asr_for_children_in_danish) execute the commant:
+```
+asr_for_children_in_danish
+```
