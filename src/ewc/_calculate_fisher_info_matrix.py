@@ -40,7 +40,7 @@ class EWC(object):
 
 
     def _write_results_to_files(self, the_matrix, file_name):
-        path =  os.path.join(absolute_path, "../../ewc/fisher_info_results/")
+        path =  os.path.join(self.absolute_path, "../../ewc/fisher_info_results/")
         torch.save(the_matrix, path+file_name +".pth")
 
 
