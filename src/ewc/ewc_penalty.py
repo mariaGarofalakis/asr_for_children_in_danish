@@ -17,8 +17,8 @@ class EWC_Pemalty(object):
         
         device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
-        old_task_parameters_path = os.path.join(absolute_path,'../../ewc/fisher_info_results/old_task_parameters.pth')
-        fisher_matrix_path = os.path.join(absolute_path,'../../ewc/fisher_info_results/fisher_matrix.pth')
+        old_task_parameters_path = os.path.join(absolute_path,'../ewc/fisher_info_results/old_task_parameters.pth')
+        fisher_matrix_path = os.path.join(absolute_path,'../ewc/fisher_info_results/fisher_matrix.pth')
 
         if not((os.path.exists(old_task_parameters_path)) & (os.path.exists(fisher_matrix_path))):
             self.calculate_fisher_info_matrix(model,dataset_name, dataset_dir,absolute_path, model_checkpoint)      
