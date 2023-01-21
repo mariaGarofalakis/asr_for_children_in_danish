@@ -15,5 +15,5 @@ python set_up.py install
 ```
 # Data augmentation
 To successfully implement data augmentations to make the dataset more generic you have to download and save audio files described bellow:
-Markup :* cd to *asr_for_children_in_danish/src/data_augmentation/noise/* and place all the audios from  [audio files for background noise]         (http://www.openslr.org/17/)
-        * cd to *asr_for_children_in_danish/src/data_augmentation/room/* and place all the audios from  [environmental Impulse Responses ](https://mcdermottlab.mit.edu/Reverb/IR_Survey.html)
+-  cd to *asr_for_children_in_danish/src/data_augmentation/noise/* and place all the audios from  [audio files for background noise]         (http://www.openslr.org/17/)
+- cd to *asr_for_children_in_danish/src/data_augmentation/room/* and place all the audios from  [environmental Impulse Responses ](https://mcdermottlab.mit.edu/Reverb/IR_Survey.html)
