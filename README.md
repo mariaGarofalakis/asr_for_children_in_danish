@@ -11,5 +11,5 @@ pip install -r requirements.txt
 ```
 This will download and install all the required python packages in order to execute this project. Moving on in the same directory (asr_for_children_in_danish) execute the commant:
 ```
-asr_for_children_in_danish
+python set_up.py install
 ```
