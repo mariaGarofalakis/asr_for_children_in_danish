@@ -87,7 +87,7 @@ class Model_fine_tuning(object):
         trainer.add_callback(CustomCallback(trainer))
         trainer.train()
 
-        save_model_info(model, dataset.processor, trainer)
+        save_model_info(model, dataset.processor, trainer, absolute_path)
 
 
         

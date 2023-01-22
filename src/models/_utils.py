@@ -6,13 +6,16 @@ from dataclasses import dataclass
 from transformers import Wav2Vec2Processor, TrainerCallback, Trainer
 from datasets import load_metric
 
-def save_model_info(model, processor, trainer):
-    model.save_pretrained("/zhome/2f/8/153764/Desktop/the_project/ASR_for_children_in_danish/final_model")
-    processor.save_pretrained("/zhome/2f/8/153764/Desktop/the_project/ASR_for_children_in_danish/save_processor")
+def save_model_info(model, processor, trainer, absolute_path):
+    model.save_pretrained(os.path.join(absolute_path,'../../final_model'))
+    processor.save_pretrained(os.path.join(absolute_path,'../../save_processor'))
+    
+    the_loss_file = os.path.join(absolute_path,'../../the_loss_file.txt')
 
-    with open('"/zhome/2f/8/153764/Desktop/the_project/ASR_for_children_in_danish/the_loss_file.txt', 'w') as f:
+    with open(the_loss_file, 'w') as f:
         for log_history in trainer.state.log_history:
             print(log_history, file=f)
+
 
 
 def get_parameter_names(model, forbidden_layer_types):
