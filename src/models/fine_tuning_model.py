@@ -1,12 +1,29 @@
+from transformers import TrainerCallback
+import copy
 import os
 import argparse
 from transformers import TrainingArguments, AutoModelForCTC
 from src.data.make_dataset import DatasetBuilding
 from src.models._costum_trainer import CustomTrainer
-from src.data._data_set import DanDataset
-from src.models._utils import Metrics, DataCollatorCTCWithPadding, CustomCallback, save_model_info
+from transformers import TrainerCallback
+from src.models._utils import Metrics, DataCollatorCTCWithPadding, save_model_info
 from src.ewc.ewc_penalty import EWC_Pemalty
 from src.data_augmentation._data_augmentation import Data_augmentation
+
+
+
+class CustomCallback(TrainerCallback):
+
+    def __init__(self, trainer) -> None:
+        super().__init__()
+        self._trainer = trainer
+
+    def on_step_end(self, args, state, control, **kwargs):
+        if control.should_evaluate:
+            control_copy = copy.deepcopy(control)
+            self._trainer.evaluate(eval_dataset=self._trainer.train_dataset, metric_key_prefix="train")
+            
+            return control_copy
 
 
 class Model_fine_tuning(object):
@@ -23,41 +40,38 @@ class Model_fine_tuning(object):
     def fine_tuning(self,absolute_path):
         data_augmentation = args.data_augm
         ewc = args.ewc
+
+
         dataset = DatasetBuilding(self.dataset_name, self.dataset_dir)
         train_data, evaluation_data = dataset.make_dataset(self.model_checkpoint)
-        
 
         data_collator = DataCollatorCTCWithPadding(processor=dataset.processor, padding=True)
-        metrics = Metrics(dataset)
-    
 
         model = AutoModelForCTC.from_pretrained(
-            self.model_checkpoint,
-            ctc_loss_reduction="mean",
-            pad_token_id=dataset.processor.tokenizer.pad_token_id,
+        self.model_checkpoint,
+        ctc_loss_reduction="mean",
+        pad_token_id=dataset.processor.tokenizer.pad_token_id,
+        )
+        metrics = Metrics(dataset)
+        training_args = TrainingArguments(
+        output_dir=os.path.join(absolute_path, "../../model_check_points"),
+        group_by_length=True,
+        per_device_train_batch_size=self.batch_size,
+        evaluation_strategy="steps",
+        num_train_epochs=self.num_epochs,
+        fp16=True,
+        gradient_checkpointing=True,
+        save_steps=5000000,
+        eval_steps=500,
+        logging_steps=500,
+        learning_rate= self.lr,
+        weight_decay = self.weight_decay,
+        warmup_steps=1000,
+        save_total_limit=2,
+        push_to_hub=False,
         )
 
         
-
-        training_args = TrainingArguments(
-                                        output_dir=os.path.join(absolute_path, "../../model_check_points"),
-                                        group_by_length=True,
-                                        per_device_train_batch_size=self.batch_size,
-                                        gradient_accumulation_steps=500000,
-                                        evaluation_strategy="steps",
-                                        num_train_epochs=self.num_epochs,
-                                        fp16=True,
-                                        gradient_checkpointing=True,
-                                        save_steps=500,
-                                        eval_steps=500,
-                                        logging_steps=500,
-                                        learning_rate=self.lr,
-                                        weight_decay=self.weight_decay,
-                                        warmup_steps=1000,
-                                        save_total_limit=2,
-                                        push_to_hub=False,
-                                        )
-
         trainer = CustomTrainer(
             model=model,
             data_collator=data_collator,
@@ -87,19 +101,18 @@ class Model_fine_tuning(object):
         trainer.add_callback(CustomCallback(trainer))
         trainer.train()
 
+
         save_model_info(model, dataset.processor, trainer, absolute_path)
 
-
-        
 
 if __name__ == "__main__":
 
     absolute_path = os.path.dirname(__file__)
     parser = argparse.ArgumentParser()
-    parser.add_argument("-lr", default=0.0003950115925060478, type=float)
-    parser.add_argument("-weight_decay", default=0.005029742789944035, type=float)
+    parser.add_argument("-lr", default=0.000302, type=float)
+    parser.add_argument("-weight_decay", default=0.0056509, type=float)
     parser.add_argument("-model_checkpoint", default="chcaa/xls-r-300m-danish-nst-cv9", type=str)
-    parser.add_argument("-batch_size", default=10, type=int)
+    parser.add_argument("-batch_size", default=4, type=int)
     parser.add_argument("-num_epochs", default=100, type=int)
     parser.add_argument("-dataset_dir", default=os.path.join(absolute_path, '../../fine_tuning_dataset'), type=str)
     parser.add_argument("-dataset_name", default="fine_tuning_dataset", type=str)
