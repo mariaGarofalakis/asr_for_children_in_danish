@@ -109,8 +109,8 @@ if __name__ == "__main__":
 
     absolute_path = os.path.dirname(__file__)
     parser = argparse.ArgumentParser()
-    parser.add_argument("-lr", default=0.000302, type=float)
-    parser.add_argument("-weight_decay", default=0.0056509, type=float)
+    parser.add_argument("-lr", default=0.00019671577306801182, type=float)
+    parser.add_argument("-weight_decay", default=1.8834389093724047e-05, type=float)
     parser.add_argument("-model_checkpoint", default="chcaa/xls-r-300m-danish-nst-cv9", type=str)
     parser.add_argument("-batch_size", default=4, type=int)
     parser.add_argument("-num_epochs", default=100, type=int)
