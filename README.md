@@ -24,3 +24,11 @@ To successfully implement data augmentations to make the dataset more generic yo
 -  cd to **asr_for_children_in_danish/src/data_augmentation/noise/** and place all the audios from [audio files for background noise](https://www.openslr.org/17/)
 
 - cd to **asr_for_children_in_danish/src/data_augmentation/room/** and place all the audios from  [environmental Impulse Responses ](https://mcdermottlab.mit.edu/Reverb/IR_Survey.html)
+
+
+# Perform fine-tuning of the base model
+In the base-folder (asr_for_children_in_danish) execute 
+```
+python /src/models/fine_tuning_model.py
+```
+There should be a **gpu** available. Also you can change the arguments in order to set the method you want to execute (EWC or weight freezing) and to set the parameters
