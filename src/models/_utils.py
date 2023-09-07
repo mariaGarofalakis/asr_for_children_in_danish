@@ -7,6 +7,8 @@ from dataclasses import dataclass
 from transformers import Wav2Vec2Processor, TrainerCallback, Trainer
 from datasets import load_metric
 
+
+
 def save_model_info(model, processor, trainer, absolute_path):
     model.save_pretrained(os.path.join(absolute_path,'../../final_model'))
     processor.save_pretrained(os.path.join(absolute_path,'../../save_processor'))

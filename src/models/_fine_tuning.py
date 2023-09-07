@@ -20,6 +20,56 @@ class Fine_tuner():
         if ewc:
             self.the_penaldy = EWC_Pemalty(self.model)
 
+    def weigh_freezing(self):
+        # freez featiure extractor
+        self.model.freeze_feature_extractor()
+        
+        k=0
+        for param in self.model.parameters():
+            if k==212:
+                param.requires_grad = False
+            k=k+1
+
+        #freeze lm_head
+        for param in self.model.lm_head.parameters():
+            param.requires_grad = False
+
+
+        #freze attention layers of the encoder
+        attention_layers = 0 
+        all_layers=0
+        k=0
+        for param in self.model.wav2vec2.encoder.layers.parameters():
+            if all_layers < 16:
+                if attention_layers < 8:
+                    param.requires_grad = False
+                    attention_layers = attention_layers+1
+                    all_layers = all_layers+1
+                else:
+                    all_layers = all_layers+1
+            else:
+                all_layers=0
+                attention_layers = 0
+                k=k+1
+
+        #freze feed-forward layers of the encoder
+        attention_layers = 0 
+        all_layers=0
+        k=0
+        for param in self.model.wav2vec2.encoder.layers.parameters():
+            if all_layers < 16:
+                if attention_layers < 8:
+                    param.requires_grad = False
+                    attention_layers = attention_layers+1
+                    all_layers = all_layers+1
+                else:
+                    all_layers = all_layers+1
+            else:
+                all_layers=0
+                attention_layers = 0
+                k=k+1
+
+
         
 
     def create_optimizer(self,learning_rate,weight_decay):
@@ -88,7 +138,7 @@ class Fine_tuner():
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.model.to(device)
         progress_bar = tqdm(range(num_training_steps))
-
+      #  self.weigh_freezing(self.model)
         self.model.train()
         the_losses = []
         for epoch in range(num_epochs):
